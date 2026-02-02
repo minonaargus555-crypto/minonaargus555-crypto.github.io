@@ -445,26 +445,34 @@
         }
 
         .final-summary {
-            background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
-            color: white;
-            border: none;
+            background: #FFFFFF;
+            color: #1E293B;
+            border: 2px solid #3B82F6;
         }
 
         .final-summary .summary-label {
-            color: rgba(255, 255, 255, 0.8);
+            color: #64748B;
         }
 
         .final-summary .summary-value {
-            color: white;
+            color: #1E293B;
             font-size: 24px;
+        }
+
+        .final-summary .summary-title {
+            color: #3B82F6;
+        }
+
+        .final-summary .cost-display {
+            color: #3B82F6;
         }
 
         .cost-input {
             padding: 8px 12px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
+            border: 2px solid #3B82F6;
             border-radius: 8px;
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
+            background: #F8FAFC;
+            color: #1E293B;
             font-size: 16px;
             width: 120px;
             text-align: center;
@@ -474,6 +482,7 @@
             font-size: 32px;
             font-weight: 700;
             margin-top: 12px;
+            color: #3B82F6;
         }
 
         /* Modifiers */
@@ -702,7 +711,7 @@
 
             <!-- Total for first two pages -->
             <div class="summary-block" style="border-color: #93C5FD;">
-                <div class="summary-title">ИТОГО ГЛАВНАЯ + ВНУТРЕННЯЯ (первые 2 страницы)</div>
+                <div class="summary-title">ИТОГО: ГЛАВНАЯ И ВНУТРЕННЯЯ</div>
                 <div class="summary-grid">
                     <div class="summary-item">
                         <div class="summary-label">Аналитика</div>
@@ -737,7 +746,7 @@
 
             <!-- Total for all blocks -->
             <div class="summary-block">
-                <div class="summary-title">ИТОГО ЧАСЫ НА БЛОКИ (ВСЕ СТРАНИЦЫ)</div>
+                <div class="summary-title">ИТОГО: ВСЕ СТРАНИЦЫ</div>
                 <div class="summary-grid">
                     <div class="summary-item">
                         <div class="summary-label">Аналитика</div>
@@ -857,7 +866,7 @@
 
             <!-- Total with works -->
             <div class="summary-block">
-                <div class="summary-title">ИТОГО ЧАСЫ С РАБОТАМИ</div>
+                <div class="summary-title">ИТОГО: ЧАСЫ С РАБОТАМИ</div>
                 <div class="summary-grid">
                     <div class="summary-item">
                         <div class="summary-label">Аналитика</div>
@@ -970,7 +979,7 @@
 
             <!-- Total with modifiers -->
             <div class="summary-block">
-                <div class="summary-title">ИТОГО С МОДИФИКАТОРАМИ</div>
+                <div class="summary-title">ИТОГО: С МОДИФИКАТОРАМИ</div>
                 <div class="summary-grid">
                     <div class="summary-item">
                         <div class="summary-label">Аналитика</div>
