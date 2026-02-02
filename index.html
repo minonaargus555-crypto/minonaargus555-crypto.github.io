@@ -1177,14 +1177,23 @@
 
         // Initialize
         function init() {
-            loadState();
-            if (state.pages.length === 0) {
-                addPage('Главная страница');
-                addPage('О компании');
+            try {
+                loadState();
+                
+                // First render fixed works to create DOM elements
+                renderFixedWorks();
+                
+                if (!state.pages || state.pages.length === 0) {
+                    state._skipCalculate = true;
+                    addPage('Главная страница');
+                    addPage('О компании');
+                    state._skipCalculate = false;
+                }
+                renderPages();
+                calculateTotals();
+            } catch(e) {
+                console.error('init error:', e);
             }
-            renderPages();
-            renderFixedWorks();
-            calculateTotals();
         }
 
         // Page management
@@ -1201,7 +1210,9 @@
                 blocks: []
             });
             renderPages();
-            calculateTotals();
+            if (!state._skipCalculate) {
+                calculateTotals();
+            }
             saveState();
         }
 
@@ -1414,32 +1425,40 @@
         }
 
         function renderFixedWorks() {
+            try {
+                // Ensure elements exist
+                const analyticsEl = document.getElementById('analyticsWorksContent');
+                if (!analyticsEl) {
+                    console.error('analyticsWorksContent not found');
+                    return;
+                }
+                
             // Analytics Works
-            document.getElementById('analyticsWorksContent').innerHTML = `
+            analyticsEl.innerHTML = `
                 <div class="work-item">
-                    <div class="work-name">Курирование <input type="number" value="${state.percentages.analyticsCuration}" min="0" max="100" style="width:60px;margin-left:8px;" onchange="state.percentages.analyticsCuration=parseFloat(this.value);calculateTotals();saveState()">%</div>
-                    <div class="work-formula">= Σ Аналитика × ${state.percentages.analyticsCuration}%</div>
+                    <div class="work-name">Курирование <input type="number" value="${state.percentages.analyticsCuration || 20}" min="0" max="100" style="width:60px;margin-left:8px;" onchange="state.percentages.analyticsCuration=parseFloat(this.value);calculateTotals();saveState()">%</div>
+                    <div class="work-formula">= Σ Аналитика × ${state.percentages.analyticsCuration || 20}%</div>
                     <div class="work-hours" id="analyticsCuration">0</div>
                 </div>
                 <div class="work-item">
-                    <div class="work-name">Операционка <input type="number" value="${state.percentages.analyticsOperations}" min="0" max="100" style="width:60px;margin-left:8px;" onchange="state.percentages.analyticsOperations=parseFloat(this.value);calculateTotals();saveState()">%</div>
-                    <div class="work-formula">= Σ Аналитика × ${state.percentages.analyticsOperations}%</div>
+                    <div class="work-name">Операционка <input type="number" value="${state.percentages.analyticsOperations || 10}" min="0" max="100" style="width:60px;margin-left:8px;" onchange="state.percentages.analyticsOperations=parseFloat(this.value);calculateTotals();saveState()">%</div>
+                    <div class="work-formula">= Σ Аналитика × ${state.percentages.analyticsOperations || 10}%</div>
                     <div class="work-hours" id="analyticsOperations">0</div>
                 </div>
                 <div class="work-item">
                     <div class="work-name">Анализ конкурентного окружения. Бенчмаркинг</div>
                     <div class="work-formula">Фиксировано</div>
-                    <div class="work-hours"><input type="number" value="${state.fixedValues.analyticsBenchmark}" min="0" style="width:70px;text-align:right;" onchange="state.fixedValues.analyticsBenchmark=parseFloat(this.value);calculateTotals();saveState()"></div>
+                    <div class="work-hours"><input type="number" value="${state.fixedValues.analyticsBenchmark || 32}" min="0" style="width:70px;text-align:right;" onchange="state.fixedValues.analyticsBenchmark=parseFloat(this.value);calculateTotals();saveState()"></div>
                 </div>
                 <div class="work-item">
                     <div class="work-name">Подготовка брифа и интервьюирование стейкхолдеров</div>
                     <div class="work-formula">Фиксировано</div>
-                    <div class="work-hours"><input type="number" value="${state.fixedValues.analyticsBrief}" min="0" style="width:70px;text-align:right;" onchange="state.fixedValues.analyticsBrief=parseFloat(this.value);calculateTotals();saveState()"></div>
+                    <div class="work-hours"><input type="number" value="${state.fixedValues.analyticsBrief || 16}" min="0" style="width:70px;text-align:right;" onchange="state.fixedValues.analyticsBrief=parseFloat(this.value);calculateTotals();saveState()"></div>
                 </div>
                 <div class="work-item">
                     <div class="work-name">Составление бизнес требований</div>
                     <div class="work-formula">Фиксировано</div>
-                    <div class="work-hours"><input type="number" value="${state.fixedValues.analyticsRequirements}" min="0" style="width:70px;text-align:right;" onchange="state.fixedValues.analyticsRequirements=parseFloat(this.value);calculateTotals();saveState()"></div>
+                    <div class="work-hours"><input type="number" value="${state.fixedValues.analyticsRequirements || 8}" min="0" style="width:70px;text-align:right;" onchange="state.fixedValues.analyticsRequirements=parseFloat(this.value);calculateTotals();saveState()"></div>
                 </div>
                 <div class="work-item">
                     <div class="work-name">Составление структуры</div>
@@ -1683,6 +1702,9 @@
                 ${renderCustomWorks('content')}
                 ${renderAddButton('content')}
             `;
+            } catch (e) {
+                console.error('renderFixedWorks error:', e);
+            }
         }
 
         // Calculate totals
@@ -1938,18 +1960,43 @@
         }
 
         function loadState() {
-            const saved = localStorage.getItem('calculatorState');
-            if (saved) {
-                const loaded = JSON.parse(saved);
-                // Merge with default state to handle missing fixedValues
-                state = {
-                    ...state,
-                    ...loaded,
-                    fixedValues: { ...state.fixedValues, ...(loaded.fixedValues || {}) },
-                    percentages: { ...state.percentages, ...(loaded.percentages || {}) },
-                    integrations: { ...state.integrations, ...(loaded.integrations || {}) },
-                    customWorks: { ...state.customWorks, ...(loaded.customWorks || {}) }
-                };
+            try {
+                const saved = localStorage.getItem('calculatorState');
+                if (saved) {
+                    const loaded = JSON.parse(saved);
+                    // Only load pages if they exist
+                    if (loaded.pages && loaded.pages.length > 0) {
+                        state.pages = loaded.pages;
+                    }
+                    // Merge percentages
+                    if (loaded.percentages) {
+                        Object.keys(loaded.percentages).forEach(key => {
+                            state.percentages[key] = loaded.percentages[key];
+                        });
+                    }
+                    // Merge fixedValues
+                    if (loaded.fixedValues) {
+                        Object.keys(loaded.fixedValues).forEach(key => {
+                            state.fixedValues[key] = loaded.fixedValues[key];
+                        });
+                    }
+                    // Merge integrations
+                    if (loaded.integrations) {
+                        Object.keys(loaded.integrations).forEach(key => {
+                            state.integrations[key] = loaded.integrations[key];
+                        });
+                    }
+                    // Merge customWorks
+                    if (loaded.customWorks) {
+                        Object.keys(loaded.customWorks).forEach(key => {
+                            if (Array.isArray(loaded.customWorks[key])) {
+                                state.customWorks[key] = loaded.customWorks[key];
+                            }
+                        });
+                    }
+                }
+            } catch (e) {
+                console.error('loadState error:', e);
             }
         }
 
@@ -1993,13 +2040,14 @@
         }
 
         function renderCustomWorks(category) {
+            if (!state.customWorks || !state.customWorks[category]) return '';
             const works = state.customWorks[category] || [];
             return works.map(work => `
                 <div class="work-item">
-                    <div class="work-name"><input type="text" value="${work.name}" style="width:250px;border:1px solid #E2E8F0;border-radius:4px;padding:4px 8px;" onchange="updateCustomWorkName('${category}', ${work.id}, this.value)"></div>
+                    <div class="work-name"><input type="text" value="${work.name || ''}" style="width:250px;border:1px solid #E2E8F0;border-radius:4px;padding:4px 8px;" onchange="updateCustomWorkName('${category}', ${work.id}, this.value)"></div>
                     <div class="work-formula">Добавлено</div>
                     <div class="work-hours" style="display:flex;align-items:center;gap:8px;">
-                        <input type="number" value="${work.hours}" min="0" style="width:70px;text-align:right;" onchange="updateCustomWorkHours('${category}', ${work.id}, this.value)">
+                        <input type="number" value="${work.hours || 0}" min="0" style="width:70px;text-align:right;" onchange="updateCustomWorkHours('${category}', ${work.id}, this.value)">
                         <button class="icon-btn delete" onclick="deleteCustomWork('${category}', ${work.id})" style="padding:4px;">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                         </button>
@@ -2033,8 +2081,12 @@
             alert('Функция экспорта в PDF будет доступна в следующей версии');
         }
 
-        // Initialize app
-        init();
+        // Initialize app when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
     </script>
 </body>
 </html>
